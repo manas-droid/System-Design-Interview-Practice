@@ -22,7 +22,7 @@ export class SqliteDB implements Database {
           db.run(`
             CREATE TABLE IF NOT EXISTS url_clicks (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
-              short_code TEXT UNIQUE NOT NULL,
+              short_code TEXT UNIQUE NOT NULL CHECK (LENGTH(short_code) <= 7),
               original_url TEXT NOT NULL,
               click_count INTEGER DEFAULT 0,
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP

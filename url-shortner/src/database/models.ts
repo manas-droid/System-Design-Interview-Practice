@@ -23,7 +23,16 @@ export class SqliteUrlModel implements UrlModel {
       });
     });
   }
+  
+  checkIfShortCodeExists(shortCode: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT 1 FROM url_clicks WHERE short_code = ?', [shortCode], (err, row) => {
+        if (err) reject(err);
+        else resolve(!!row);
+      });
 
+    })
+  }
   getAll(): Promise<UrlRecord[]> {
     return new Promise((resolve, reject) => {
       db.all('SELECT * FROM url_clicks ORDER BY created_at DESC', (err, rows) => {
