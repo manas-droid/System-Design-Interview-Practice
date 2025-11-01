@@ -1,6 +1,9 @@
 
 import {Request, Response} from 'express';
-
+import { IURLDBService, URLDBService } from '../service/URLDBService';
+import UrlShortenerService from '../service/UrlShortenerService';
+import { SqliteUrlModel } from '../database/models';
+import { UrlRecord } from '../database/models.interface';
 
 /*
   To create a short URL 
@@ -32,19 +35,27 @@ interface CreateUrlRequestBody {
 
 
 export async function createShortUrl(req : Request, res:Response) {
-  // Implementation for creating a short URL
-  const { actual_url } = req.body;
-  
-  // Validation is now handled by middleware
-  // Business logic goes here
-  
+  const body: CreateUrlRequestBody = req.body;
+  const urlDBService:IURLDBService = new URLDBService(new UrlShortenerService(), new SqliteUrlModel());
+
+  try {
+    urlDBService.createShortenedURL(body.actual_url);
+
+  } catch (error) {
+    return res.status(500).json({ message: 'Error creating short URL' });
+  }
+
   return res.status(201).json({ message: 'Short URL created successfully' });
 }
 
 
 export async function getAllUrls(req : Request, res:Response) {
-  // Implementation for getting all URLs    
-    return res.status(200).json({ message: 'List of all URLs' });
+  // Implementation for getting all URLs   
+  const urlDBService:IURLDBService = new URLDBService(new UrlShortenerService(), new SqliteUrlModel());
+  const allURLS: UrlRecord[] = await urlDBService.getAllURLs();
+  
+  
+  return res.status(200).json({ message: 'List of all URLs' , data: allURLS});
 }
 
 export async function redirectToLongUrl(req : Request, res:Response) {
