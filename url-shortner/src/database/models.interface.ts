@@ -16,12 +16,6 @@ export interface ClickAnalytic {
 
 export interface UrlModel {
     create(shortCode: string, originalUrl: string): Promise<void>;
-    findByShortCode(shortCode: string): Promise<UrlRecord | null>;
     getAll(): Promise<UrlRecord[]>;
-    incrementClickCount(shortCode: string): Promise<void>;
-}
-
-
-export interface ClickAnalyticsModel {
-    create(shortCode: string, userAgent?: string): Promise<void>;
+    processClickTransaction(shortCode: string, userAgent: string): Promise<string>;
 }

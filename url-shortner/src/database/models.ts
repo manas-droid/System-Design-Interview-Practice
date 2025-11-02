@@ -1,5 +1,5 @@
 import { db } from './database';
-import { UrlRecord, ClickAnalyticsModel, UrlModel } from './models.interface';
+import { UrlRecord, UrlModel } from './models.interface';
 
 
 
@@ -12,15 +12,6 @@ export class SqliteUrlModel implements UrlModel {
         else resolve();
       });
       stmt.finalize();
-    });
-  }
-
-  findByShortCode(shortCode: string): Promise<UrlRecord | null> {
-    return new Promise((resolve, reject) => {
-      db.get('SELECT * FROM url_clicks WHERE short_code = ?', [shortCode], (err, row) => {
-        if (err) reject(err);
-        else resolve(row as UrlRecord || null);
-      });
     });
   }
   
@@ -42,28 +33,41 @@ export class SqliteUrlModel implements UrlModel {
     });
   }
 
-  incrementClickCount(shortCode: string): Promise<void> {
+  processClickTransaction(shortCode: string, userAgent?: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      db.run('UPDATE url_clicks SET click_count = click_count + 1 WHERE short_code = ?', [shortCode], (err) => {
-        if (err) reject(err);
-        else resolve();
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        db.get('SELECT original_url FROM url_clicks WHERE short_code = ?', [shortCode], (err, row) => {
+          if (err || !row) {
+            db.run('ROLLBACK');
+            reject(err || new Error('Short code not found'));
+            return;
+          }
+          
+          const originalUrl = (row as any).original_url;
+          
+          db.run('UPDATE url_clicks SET click_count = click_count + 1 WHERE short_code = ?', [shortCode], (err) => {
+            if (err) {
+              db.run('ROLLBACK');
+              reject(err);
+              return;
+            }
+            
+            db.run('INSERT INTO click_analytics (short_code, user_agent) VALUES (?, ?)', [shortCode, userAgent || null], (err) => {
+              if (err) {
+                db.run('ROLLBACK');
+                reject(err);
+                return;
+              }
+              
+              db.run('COMMIT');
+              resolve(originalUrl);
+            });
+          });
+        });
       });
     });
   }
-}
 
-
-
-
-export class SqliteClickAnalyticsModel implements ClickAnalyticsModel {
-  create(shortCode: string, userAgent?: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const stmt = db.prepare('INSERT INTO click_analytics (short_code, user_agent) VALUES (?, ?)');
-      stmt.run([shortCode, userAgent || null], function(err) {
-        if (err) reject(err);
-        else resolve();
-      });
-      stmt.finalize();
-    });
-  }
 }

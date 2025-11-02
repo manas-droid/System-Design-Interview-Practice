@@ -6,6 +6,7 @@ import { IUrlShortenerService } from "./UrlShortenerService";
 export interface IURLDBService {
     createShortenedURL(originalUrl: string): Promise<void>;
     getAllURLs(): Promise<UrlRecord[]>;
+    getLongURL(shortCode: string, userAgent?:string): Promise<string>;
 }
 
 
@@ -19,7 +20,6 @@ export class URLDBService implements IURLDBService {
         this.urlModel = urlModel;
     }
 
-
     async createShortenedURL(originalUrl : string): Promise<void> {
         const shortCode: string = await this.shortenerService.generateShortenCode();
         try {
@@ -29,11 +29,18 @@ export class URLDBService implements IURLDBService {
         }
     }
     
-
     async getAllURLs(): Promise<UrlRecord[]> {
         // Implementation for getting all URLs
     
         return await this.urlModel.getAll();
+    }
+
+    async getLongURL(shortCode: string, userAgent: string): Promise<string> {
+        try{
+            return await this.urlModel.processClickTransaction(shortCode, userAgent);
+        }catch(error){
+            throw new Error("Error while getting Long URL: "+ (error as Error).message);
+        }
     }
 
 

@@ -5,9 +5,9 @@ import { validateCreateUrl } from '../middleware/validation';
 
 const router = Router();
 
-router.get('/urls/:shortCode', redirectToLongUrl);
-router.get('/urls', getAllUrls);
-router.post('/urls', validateCreateUrl, createShortUrl);
+router.get('/:shortCode', redirectToLongUrl);
+router.get('/api/urls', getAllUrls);
+router.post('/api/urls', validateCreateUrl, createShortUrl);
 
 
 

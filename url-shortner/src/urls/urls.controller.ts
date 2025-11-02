@@ -33,10 +33,10 @@ interface CreateUrlRequestBody {
 }
 
 
+const urlDBService:IURLDBService = new URLDBService(new UrlShortenerService(), new SqliteUrlModel());
 
 export async function createShortUrl(req : Request, res:Response) {
   const body: CreateUrlRequestBody = req.body;
-  const urlDBService:IURLDBService = new URLDBService(new UrlShortenerService(), new SqliteUrlModel());
 
   try {
     urlDBService.createShortenedURL(body.actual_url);
@@ -51,15 +51,19 @@ export async function createShortUrl(req : Request, res:Response) {
 
 export async function getAllUrls(req : Request, res:Response) {
   // Implementation for getting all URLs   
-  const urlDBService:IURLDBService = new URLDBService(new UrlShortenerService(), new SqliteUrlModel());
   const allURLS: UrlRecord[] = await urlDBService.getAllURLs();
-  
   
   return res.status(200).json({ message: 'List of all URLs' , data: allURLS});
 }
 
 export async function redirectToLongUrl(req : Request, res:Response) {
   // Implementation for redirecting to the long URL
-
-    return res.status(302).json({ message: 'Redirecting to long URL' });
+  const shortCode: string = req.params.shortCode;
+  const userAgent: (string | undefined) = req.headers['user-agent'];
+  try{
+    const longURL : string = await urlDBService.getLongURL(shortCode, userAgent);
+    return res.redirect(longURL);
+  } catch(error){
+    return res.status(500).json({message: (error as Error).message});
+  }
 }
