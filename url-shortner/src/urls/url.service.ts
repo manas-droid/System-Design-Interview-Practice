@@ -1,7 +1,6 @@
-
-import { url } from "inspector";
-import { UrlModel, UrlRecord } from "../database/models.interface";
-import { IUrlShortenerService } from "./UrlShortenerService";
+import {UrlRecord } from "./url.model";
+import { IUrlShortenerService } from "../service/UrlShortenerService";
+import { IUrlRepository } from "./url.repository";
 
 export interface IURLDBService {
     createShortenedURL(originalUrl: string): Promise<void>;
@@ -13,9 +12,9 @@ export interface IURLDBService {
 
 export class URLDBService implements IURLDBService {
     private shortenerService: IUrlShortenerService;
-    private urlModel: UrlModel;
+    private urlModel: IUrlRepository;
 
-    constructor(shortenerService: IUrlShortenerService, urlModel: UrlModel) {
+    constructor(shortenerService: IUrlShortenerService, urlModel: IUrlRepository) {
         this.shortenerService = shortenerService;
         this.urlModel = urlModel;
     }

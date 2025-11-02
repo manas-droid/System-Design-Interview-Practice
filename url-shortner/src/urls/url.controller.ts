@@ -1,9 +1,9 @@
 
 import {Request, Response} from 'express';
-import { IURLDBService, URLDBService } from '../service/URLDBService';
+import { IURLDBService, URLDBService } from './url.service';
 import UrlShortenerService from '../service/UrlShortenerService';
-import { SqliteUrlModel } from '../database/models';
-import { UrlRecord } from '../database/models.interface';
+import { SqliteUrlRepository } from './url.repository';
+import { UrlRecord } from './url.model';
 
 /*
   To create a short URL 
@@ -33,7 +33,7 @@ interface CreateUrlRequestBody {
 }
 
 
-const urlDBService:IURLDBService = new URLDBService(new UrlShortenerService(), new SqliteUrlModel());
+const urlDBService:IURLDBService = new URLDBService(new UrlShortenerService(), new SqliteUrlRepository());
 
 export async function createShortUrl(req : Request, res:Response) {
   const body: CreateUrlRequestBody = req.body;

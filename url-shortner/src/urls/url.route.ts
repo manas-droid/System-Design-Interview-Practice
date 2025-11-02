@@ -1,6 +1,6 @@
 
 import {Router} from 'express';
-import {createShortUrl, getAllUrls ,redirectToLongUrl} from './urls.controller';
+import {createShortUrl, getAllUrls ,redirectToLongUrl} from './url.controller';
 import { validateCreateUrl, validateShortCode } from '../middleware/validation';
 
 const router = Router();

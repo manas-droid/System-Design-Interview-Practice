@@ -1,9 +1,15 @@
-import { db } from './database';
-import { UrlRecord, UrlModel } from './models.interface';
+import { db } from '../database/database';
+import { UrlRecord } from './url.model';
 
 
 
-export class SqliteUrlModel implements UrlModel {
+export interface IUrlRepository {
+    create(shortCode: string, originalUrl: string): Promise<void>;
+    getAll(): Promise<UrlRecord[]>;
+    processClickTransaction(shortCode: string, userAgent: string): Promise<string>;
+}
+
+export class SqliteUrlRepository implements IUrlRepository {
   create(shortCode: string, originalUrl: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const stmt = db.prepare('INSERT INTO url_clicks (short_code, original_url) VALUES (?, ?)');

@@ -1,4 +1,4 @@
-import { SqliteUrlModel } from "../database/models";
+import { SqliteUrlRepository } from "../urls/url.repository";
 
 export interface IUrlShortenerService {
     generateShortenCode(): Promise<string>;
@@ -11,7 +11,7 @@ class UrlShortenerService implements IUrlShortenerService {
 
     private readonly attemptsLimit:number = 15;
 
-    private readonly urlModel: SqliteUrlModel = new SqliteUrlModel();
+    private readonly urlModel: SqliteUrlRepository = new SqliteUrlRepository();
 
     private generateRandomKey(): string {
         let key = '';

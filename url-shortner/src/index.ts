@@ -1,5 +1,5 @@
 import express from 'express';
-import urlRouter from './urls/urls.route';
+import urlRouter from './urls/url.route';
 import { SqliteDB } from './database/database';
 import { errorHandler } from './middleware/errorHandler';
 
