@@ -17,3 +17,18 @@ export const validateCreateUrl = (req: Request, res: Response, next: NextFunctio
   
   next();
 };
+
+
+export const validateShortCode = (req: Request, res: Response, next: NextFunction) =>{
+
+  const shortCode: string = req.params.shortCode;
+
+  console.log("Validating short code: ", shortCode)
+
+  if(!shortCode || shortCode.length != 7) {
+    return res.status(400).json({error: "Invalid url format."});
+  }
+
+
+  next();
+}
