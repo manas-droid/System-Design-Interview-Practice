@@ -7,6 +7,8 @@ export interface IUrlRepository {
     create(shortCode: string, originalUrl: string): Promise<void>;
     getAll(): Promise<UrlRecord[]>;
     processClickTransaction(shortCode: string, userAgent: string): Promise<string>;
+    getClickCountByShortCode(shortCode: string): Promise<number>;
+    checkIfShortCodeExists(shortCode: string): Promise<boolean>;
 }
 
 export class SqliteUrlRepository implements IUrlRepository {
@@ -74,6 +76,20 @@ export class SqliteUrlRepository implements IUrlRepository {
         });
       });
     });
+  }
+
+  getClickCountByShortCode(shortCode: string): Promise<number> {
+  
+    return new Promise((resolve, reject) => {
+      db.get('SELECT click_count FROM url_clicks WHERE short_code = ?', [shortCode], (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? (row as any).click_count : 0);
+        }
+      });
+    });
+  
   }
 
 }

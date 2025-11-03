@@ -1,5 +1,5 @@
 import {UrlRecord } from "./url.model";
-import { IUrlShortenerService } from "../service/UrlShortenerService";
+import { IUrlShortenerService } from "../utils/UrlShortenerService";
 import { IUrlRepository } from "./url.repository";
 
 export interface IURLDBService {

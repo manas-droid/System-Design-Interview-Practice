@@ -1,5 +1,6 @@
 import express from 'express';
 import urlRouter from './urls/url.route';
+import analyticsRouter from './analytics/analytics.route';
 import { SqliteDB } from './database/database';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -8,6 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use("/", urlRouter);
+app.use("/api/analytics", analyticsRouter);
 app.use(errorHandler);
 
 

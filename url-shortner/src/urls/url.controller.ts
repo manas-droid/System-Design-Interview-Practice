@@ -1,7 +1,7 @@
 
 import {Request, Response} from 'express';
 import { IURLDBService, URLDBService } from './url.service';
-import UrlShortenerService from '../service/UrlShortenerService';
+import UrlShortenerService from '../utils/UrlShortenerService';
 import { SqliteUrlRepository } from './url.repository';
 import { UrlRecord } from './url.model';
 
