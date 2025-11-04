@@ -1,0 +1,5 @@
+{
+  "services": {
+      "url-shortener" : "http://localhost:3000"
+  }
+}
