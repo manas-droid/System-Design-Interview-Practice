@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {IRateLimiter, FixedWindowRateLimiter} from "../services/rate.limiter"
+import {IRateLimiter, FixedWindowRateLimiter} from "../services/rate-limiter/fixed.window.rate.limiter"
 
 
 const rateLimiter: IRateLimiter = new FixedWindowRateLimiter();

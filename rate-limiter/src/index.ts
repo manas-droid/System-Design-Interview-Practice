@@ -7,9 +7,10 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 app.use(express.json());
+app.use(rateLimiterMiddleware);
 
 Object.entries(routes.services).forEach(([path, target]) => {
-  app.use(path, rateLimiterMiddleware, (req, res) => { proxy(req, res, target);});
+  app.use(path, (req, res) => { proxy(req, res, target);});
 })
 
 

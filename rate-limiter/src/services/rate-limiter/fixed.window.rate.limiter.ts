@@ -1,8 +1,5 @@
-export interface IRateLimiter {
-    limitRequest(userId: string): boolean;
-}
 
-
+import { IRateLimiter } from "./rate.limiter.interface";
 
 interface FixedWindowCounter{
     count:number;
