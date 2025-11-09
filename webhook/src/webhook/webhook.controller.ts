@@ -1,5 +1,5 @@
 import {Request, Response} from 'express';
-import { InMemoryWebhookRepository, IWebhookRepository, WebHookSubscriber } from './webhook.repository';
+import { InMemoryWebhookRepository, IWebhookRepository, WebHookSubscriber } from './repository/webhook.inmemory.repository';
 
 interface WebHookRequest{
     webHookUrl:string,
@@ -25,3 +25,9 @@ export async function registryController(req:Request, res:Response){
 
 }
 
+
+
+
+export async function triggerController(req:Request, res:Response){
+
+}

@@ -1,11 +1,13 @@
 import {Router} from 'express';
-import {registryController} from './webhook.controller';
+import {registryController, triggerController} from './webhook.controller';
 
 const router = Router()
 
 
 
 router.post('/register', registryController);
+
+router.post('/trigger', triggerController);
 
 
 export default router;
