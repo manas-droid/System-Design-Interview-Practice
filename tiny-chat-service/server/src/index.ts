@@ -39,10 +39,14 @@ messageRouter(app, io);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Hello World!' });
+
+
 });
 
 
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+
 });
