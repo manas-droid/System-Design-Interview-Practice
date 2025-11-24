@@ -1,7 +1,7 @@
 import {DataSource} from 'typeorm'
 
 import  dotenv from 'dotenv'
-import { User } from '../login/user.model';
+import { User } from '../user/user.model';
 
 dotenv.config({
   path: '.env.dev'
@@ -15,8 +15,20 @@ const PostgreSQLDatasource = new DataSource({
     username: process.env.DB_USER_NAME,
     password: process.env.DB_USER_PASS,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10): 5432,
-    entities: [User]
+    entities: [User],
+    synchronize:true
 })
 
+
+export const initiateConnection = async () => {
+  
+  try {
+      await PostgreSQLDatasource.initialize()
+      console.log("Data Source has been initialized!")
+    } catch (error) {
+      console.error("Error during Data Source initialization", error)
+  }
+
+}
 
 export default PostgreSQLDatasource;
