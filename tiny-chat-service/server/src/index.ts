@@ -1,4 +1,5 @@
 import express from 'express';
+import 'reflect-metadata';
 import {Server, Socket} from "socket.io"
 import http from 'http';
 import { messageRouter } from './message.route';

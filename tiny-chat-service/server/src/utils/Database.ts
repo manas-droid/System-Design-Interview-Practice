@@ -2,6 +2,9 @@ import {DataSource} from 'typeorm'
 
 import  dotenv from 'dotenv'
 import { User } from '../user/user.model';
+import { Room } from '../room/room.model';
+import { RoomParticipant } from '../room/room.participant.model';
+import { Message } from '../message/message.model';
 
 dotenv.config({
   path: '.env.dev'
@@ -15,7 +18,7 @@ const PostgreSQLDatasource = new DataSource({
     username: process.env.DB_USER_NAME,
     password: process.env.DB_USER_PASS,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10): 5432,
-    entities: [User],
+    entities: [User, Room, RoomParticipant, Message],
     synchronize:true
 })
 
