@@ -16,7 +16,7 @@ export class Room{
     id!:string;
 
     @Column({
-        type:"enum",
+        type:"simple-enum",
         enum:RoomType,
         default: RoomType.DIRECT
     })

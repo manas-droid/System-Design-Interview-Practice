@@ -35,10 +35,10 @@ export class Message{
     @Column({type:"text"})
     content !: string
 
-    @CreateDateColumn({name:"created_at", type:"timestamptz"})
+    @CreateDateColumn({name:"created_at"})
     createdAt !: Date
 
-    @DeleteDateColumn({name:"deleted_at", nullable:true , type:"timestamptz"})
+    @DeleteDateColumn({name:"deleted_at", nullable:true })
     deletedAt !: Date | null
 
     @ManyToOne(() => User, {nullable:true, onDelete:"SET NULL"})

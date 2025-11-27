@@ -24,7 +24,7 @@ export class RoomParticipant{
 
 
     @Column({
-        type:"enum",
+        type:"simple-enum",
         enum:ParticipantRole,
         default:ParticipantRole.MEMBER
     })
