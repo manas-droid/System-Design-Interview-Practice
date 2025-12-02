@@ -72,25 +72,75 @@ const normalizeRoom = (raw: any, currentUserId: string): RoomSummary => {
   };
 };
 
-const normalizeMessage = (raw: any, roomId: string): ChatMessage => ({
-  id: sanitizeId(raw?.id ?? raw?._id ?? crypto.randomUUID()),
-  sender:
-    typeof raw?.sender === 'string'
-      ? raw.sender
-      : typeof raw?.from === 'string'
-        ? raw.from
-        : typeof raw?.author === 'string'
-          ? raw.author
-          : 'Unknown sender',
-  content: typeof raw?.content === 'string' ? raw.content : typeof raw?.message === 'string' ? raw.message : '',
-  timestamp:
-    typeof raw?.timestamp === 'string'
-      ? raw.timestamp
-      : typeof raw?.createdAt === 'string'
-        ? raw.createdAt
-        : new Date().toISOString(),
-  roomId
-});
+const normalizeMessage = (raw: any, roomId: string): ChatMessage => {
+  const owner = raw?.messageOwner ?? raw?.owner ?? raw?.message_owner;
+  const ownerName =
+    typeof owner?.userName === 'string'
+      ? owner.userName
+      : typeof owner?.name === 'string'
+        ? owner.name
+        : undefined;
+  const ownerIdCandidate = owner?.userId ?? owner?.id ?? owner?.user_id;
+
+  const timestampSource = raw?.timestamp ?? raw?.createdAt ?? raw?.created_at;
+  const timestamp =
+    typeof timestampSource === 'string'
+      ? timestampSource
+      : timestampSource instanceof Date
+        ? timestampSource.toISOString()
+        : new Date().toISOString();
+
+  const candidateId =
+    raw?.id ??
+    raw?._id ??
+    raw?.messageId ??
+    raw?.message_id ??
+    (ownerIdCandidate && timestamp ? `${ownerIdCandidate}-${timestamp}` : null);
+  const normalizedId = sanitizeId(candidateId);
+
+  return {
+    id: normalizedId || crypto.randomUUID(),
+    sender:
+      ownerName ??
+      (typeof raw?.sender === 'string'
+        ? raw.sender
+        : typeof raw?.from === 'string'
+          ? raw.from
+          : typeof raw?.author === 'string'
+            ? raw.author
+            : 'Unknown sender'),
+    content: typeof raw?.content === 'string' ? raw.content : typeof raw?.message === 'string' ? raw.message : '',
+    timestamp,
+    receiver:
+      typeof raw?.receiver === 'string'
+        ? raw.receiver
+        : typeof raw?.to === 'string'
+          ? raw.to
+          : typeof raw?.targetUserId === 'string'
+            ? raw.targetUserId
+            : ownerIdCandidate
+              ? String(ownerIdCandidate)
+              : '',
+    roomId
+  };
+};
+
+const getConversationPartnerId = (room: RoomSummary | null, currentUserId: string): string | null => {
+  if (!room) {
+    return null;
+  }
+  if (!Array.isArray(room.participants) || room.participants.length === 0) {
+    return null;
+  }
+
+  const counterpart = room.participants.find((participant) => participant.id !== currentUserId);
+  if (counterpart?.id) {
+    return counterpart.id;
+  }
+
+  const fallbackParticipant = room.participants[0];
+  return fallbackParticipant?.id ?? null;
+};
 
 export function ChatDashboard({ auth }: ChatDashboardProps) {
   const socket = useMemo(() => getSocket(), []);
@@ -130,7 +180,6 @@ export function ChatDashboard({ auth }: ChatDashboardProps) {
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
-      socket.close();
     };
   }, [socket]);
 
@@ -223,12 +272,12 @@ export function ChatDashboard({ auth }: ChatDashboardProps) {
       setIsLoadingMessages(true);
       setMessagesError(null);
       try {
-        const response = await fetch(`${SERVER_URL}/api/rooms/${activeRoom.id}?userId=${encodeURIComponent(userId)}`);
+        const response = await fetch(`${SERVER_URL}/api/messages/${activeRoom.id}`);
         if (!response.ok) {
           throw new Error('Unable to load messages');
         }
         const payload = await response.json();
-        const records = Array.isArray(payload?.messages) ? payload.messages : Array.isArray(payload) ? payload : [];
+        const records = Array.isArray(payload) ? payload : Array.isArray(payload?.messages) ? payload.messages : [];
         if (!ignore) {
           setMessages(records.map((record: unknown) => normalizeMessage(record, activeRoom.id)));
         }
@@ -325,30 +374,80 @@ export function ChatDashboard({ auth }: ChatDashboardProps) {
       return;
     }
     const trimmed = pendingMessage.trim();
+    const receiverId = getConversationPartnerId(activeRoom, userId);
+    if (!receiverId) {
+      setMessagesError('Unable to determine the recipient for this conversation.');
+      return;
+    }
+
+    const previousRoomId = activeRoom.id;
+    const wasVirtualRoom = Boolean(activeRoom.isVirtual);
+
     const outgoing: ChatMessage = {
       id: crypto.randomUUID(),
       sender: displayName,
       content: trimmed,
       timestamp: new Date().toISOString(),
-      roomId: activeRoom.id
+      receiver: receiverId,
+      roomId: previousRoomId
     };
 
     setPendingMessage('');
     setMessages((prev) => [...prev, outgoing]);
     setRooms((prevRooms) =>
-      prevRooms.map((room) => (room.id === activeRoom.id ? { ...room, lastMessagePreview: trimmed } : room))
+      prevRooms.map((room) => (room.id === previousRoomId ? { ...room, lastMessagePreview: trimmed } : room))
     );
     setIsSending(true);
     setMessagesError(null);
 
     try {
-      const response = await fetch(`${SERVER_URL}/api/message`, {
+      const payload = {
+        sender: userId,
+        receiver: receiverId,
+        content: trimmed,
+        roomId: wasVirtualRoom ? null : previousRoomId
+      };
+
+      const response = await fetch(`${SERVER_URL}/api/dm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(outgoing)
+        body: JSON.stringify(payload)
       });
       if (!response.ok) {
         throw new Error('Unable to send message');
+      }
+
+      let delivery: { roomId?: string; content?: string } | null = null;
+      try {
+        delivery = await response.json();
+      } catch (error) {
+        delivery = null;
+      }
+
+      const resolvedRoomIdRaw = delivery?.roomId;
+      const resolvedRoomId =
+        resolvedRoomIdRaw !== undefined && resolvedRoomIdRaw !== null && `${resolvedRoomIdRaw}`.trim()
+          ? String(resolvedRoomIdRaw)
+          : previousRoomId;
+      const resolvedContent =
+        typeof delivery?.content === 'string' && delivery.content ? delivery.content : trimmed;
+
+      if (wasVirtualRoom || previousRoomId !== resolvedRoomId) {
+        setRooms((prevRooms) =>
+          prevRooms.map((room) =>
+            room.id === previousRoomId
+              ? { ...room, id: resolvedRoomId, isVirtual: false, lastMessagePreview: resolvedContent }
+              : room
+          )
+        );
+        setActiveRoom((current) =>
+          current && current.id === previousRoomId ? { ...current, id: resolvedRoomId, isVirtual: false } : current
+        );
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.roomId === previousRoomId ? { ...message, roomId: resolvedRoomId } : message
+          )
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to send message';

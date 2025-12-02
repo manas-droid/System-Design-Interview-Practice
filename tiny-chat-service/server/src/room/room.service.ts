@@ -2,13 +2,13 @@ import { DataSource, Repository } from "typeorm";
 import { Room, RoomType } from "./room.model";
 import dB from '../utils/Database'
 import { ParticipantRole, RoomParticipant } from "./room.participant.model";
+import { UserSearchResponse } from "../user/user.response";
 
 export interface RoomResponse {
     roomTitle : string;
-    roomId: string
+    roomId: string;
+    participants:UserSearchResponse[]
 }
-
-
 
 
 export interface IRoomService {
@@ -51,7 +51,11 @@ export class PSQLRoomService implements IRoomService {
 
             return {
                 roomTitle: room.name || "",
-                roomId: room.id
+                roomId: room.id,
+                participants: room.participants.map((participant)=>{ return {
+                    userId: participant.participant.id,
+                    userName: participant.participant.userName
+                }})
             };
         });
     }

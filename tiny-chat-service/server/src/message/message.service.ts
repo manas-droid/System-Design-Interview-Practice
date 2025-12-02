@@ -2,11 +2,22 @@ import { Repository } from "typeorm";
 import { IRoomService, PSQLRoomService } from "../room/room.service";
 import { Message } from "./message.model";
 import dB from '../utils/Database';
+import { UserSearchResponse } from "../user/user.response";
+import { User } from "../user/user.model";
+import { Room } from "../room/room.model";
 
+
+
+export interface MessagePerRoomResponse {
+    message : string, 
+    messageOwner:UserSearchResponse,
+    createdAt:Date
+}
 
 export interface IMessageService{
 
     addDirectMessage(ownerId:string, otherUserId:string,messageContent:string, roomId:(string|null)) : Promise<MessageResponse>;    
+    getMessagesForUserWithRoomID(roomId:string): Promise<MessagePerRoomResponse[]>
 }
 
 
@@ -30,19 +41,17 @@ export class PSQLMessageService implements IMessageService {
 
     async addDirectMessage(ownerId: string,otherUserId:string,messageContent: string, roomId: (string | null)): Promise<MessageResponse> {
 
-        console.log("ownerId: ",ownerId , "otherUserId: ", otherUserId, "messageContent: ", messageContent, "roomId: ", roomId);
 
         if(!roomId){
             roomId = (await this.roomService.getOrCreateDirectRoom(ownerId, otherUserId)).id; 
-            console.log("Newly Created Room Id: ", roomId);
         }   
 
 
 
         const message = this.messageRepository.create({
-            content : messageContent,
-            ownerId: ownerId,
-            roomId : roomId
+            content: messageContent,
+            owner: { id: ownerId } as User,
+            room: { id: roomId } as Room
         });
 
 
@@ -55,5 +64,27 @@ export class PSQLMessageService implements IMessageService {
         roomId: messageRepo.roomId
        }
     }
+
+    async getMessagesForUserWithRoomID(roomId: string): Promise<MessagePerRoomResponse[]> {
+            
+        const messageDetails:Message[] = await this.messageRepository
+        .find({ where : { room: {
+            id : roomId
+        } }  , relations: {owner:true , room:true} });
+
+        return messageDetails.map((m:Message)=>{
+
+            return {
+                message: m.content,
+                createdAt: m.createdAt,
+                messageOwner: {
+                    userId: m.owner.id,
+                    userName: m.owner.userName
+                }
+            }
+        });
+
+    }
+
 
 }

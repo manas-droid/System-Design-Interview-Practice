@@ -6,5 +6,4 @@ const router = Router()
 router.get("/rooms", getRoomsController);
 
 
-
 export default router
