@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper # Best Practice: Define hostname
+    container_name: zookeeper # Best Practice: Define container name
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka # Best Practice: Define hostname
+    container_name: kafka # Best Practice: Define container name
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      
+      # --- CRITICAL NETWORKING FIX ---
+      # 1. Map protocols to listener names
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      # 2. Kafka listens on the internal Docker port (29092) and the external host port (9092)
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      # 3. Advertises both listeners: internal service name (kafka) and external IP (localhost)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      
+      # Required for Zookeeper mode
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      
+    # Best Practice: Persist Kafka data across restarts
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  redis:
+    image: redis:latest
+    hostname: redis
+    container_name: redis
+    # Add a restart policy to ensure it comes back online after a failure
+    restart: always 
+    ports:
+      - "6379:6379"
+
+# Define the named volumes
+volumes:
+  kafka_data:
