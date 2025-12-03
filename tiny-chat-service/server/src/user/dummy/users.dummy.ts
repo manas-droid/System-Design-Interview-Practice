@@ -71,6 +71,5 @@ export async function addDummyUsers(dummyUsers: Array<DummyUserSeed> = DEFAULT_D
 
         const savedUsers = await userRepository.save(newUsers);    
 
-        console.log("Created Dummy Users successfully!" , savedUsers);
     }
 

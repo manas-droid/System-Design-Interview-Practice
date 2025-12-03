@@ -26,8 +26,17 @@ const io = new Server(server, {
   }
 });
 
+const getUserChannel = (userId: string) => `user:${userId}`;
+
 
 io.on("connection", (socket:Socket)=>{
+  socket.on('identify_user', (userId:string)=>{
+    if(!userId){
+      return;
+    }
+    socket.join(getUserChannel(userId));
+    socket.data.userId = userId;
+  });
   socket.on('join_room', (roomId:string)=>{
     socket.join(roomId)
   });
