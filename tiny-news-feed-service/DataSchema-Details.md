@@ -23,10 +23,36 @@
 
 ## Reference for User Follower Graph:
 
-- Hot user vera.garcia now has 1057 followers.
-- Hot user silas.mason now has 1042 followers.
-- Hot user ivy.santos now has 1054 followers.
-- Hot user yara.usher now has 1044 followers.
-- Hot user willow.zimmerman now has 1048 followers.
-- Inserted 218575 follower relationships.
-- Seeded 2500 users.
+- Hot user nora.lopez now has 1047 followers.
+- Hot user willow.mason now has 1055 followers.
+- Hot user vera.usher now has 1065 followers.
+- Hot user liam.diaz now has 1053 followers.
+- Hot user jonah.ellis now has 1052 followers.
+- Inserted 217711 follower relationships.
+- Seeded 2500 users.- Seeded 2500 users.
+
+
+## Connection Details:
+
+Connect with psql and inspect the schema directly from the CLI.
+
+Export password so psql doesn’t prompt each time:
+
+export PGPASSWORD = <password>
+
+Open the DB: 
+psql -h localhost -p 5432 -U <user_name> -d <db_name>
+
+Once in psql, list tables (entities maps to tables):
+
+\dn                             -- list schemas (confirm <schema_name>)
+
+\dt <schema_name>.*            -- all tables in that schema
+
+For table structure:
+
+\d <schema_name>.user          -- or follower / post
+
+Query data if needed:
+
+SELECT * FROM <schema_name>.user LIMIT 5;
