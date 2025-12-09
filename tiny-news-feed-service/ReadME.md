@@ -87,3 +87,21 @@ This project leverages a hybrid local setup, utilizing native installations for 
 Simulate thousands of concurrent GET requests to the Feed Service (from Normal User IDs).
 
 Verify the P99 latency is below 100ms. This test validates the efficiency of the Redis read and the Feed Service's ability to merge the Hot User (Pull) content quickly.
+
+### Authentication API (local dev focus)
+
+- Environment variables `.env.dev` gained the following knobs: `PORT`, `PASSWORD_SALT_ROUNDS`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`, and `REFRESH_COOKIE_NAME`. They control bcrypt cost, JWT secrets/expirations, and the refresh-token cookie name.
+- The Express app now exposes `/api/auth/*` endpoints:
+  - `POST /api/auth/signup` — accepts `{ email, password, handle, firstName, lastName }`, creates the user, responds with `{ user, accessToken, expiresIn }` and sets an httpOnly refresh-token cookie.
+  - `POST /api/auth/login` — accepts `{ email, password }`, validates credentials, responds with a new access token + refresh cookie.
+  - `POST /api/auth/refresh` — reads the refresh cookie, verifies it, and returns a new access token + cookie pair (401 if missing/invalid).
+  - `POST /api/auth/logout` — clears the refresh cookie (no body, 204 response).
+- Refresh tokens are stored only in the cookie named by `REFRESH_COOKIE_NAME`; access tokens are returned in the JSON payload so clients can store them however they like.
+
+### Frontend integration checklist
+
+1. **Sign-up/Login forms** post against `/api/auth/signup` or `/api/auth/login`. Persist the returned `accessToken` client-side (localStorage or memory for this local-only build).
+2. **Attach credentials** by sending `Authorization: Bearer <accessToken>` on every API call that needs the user's identity.
+3. **Handle expiry** by calling `POST /api/auth/refresh` whenever an API call fails with 401 or on proactive schedule; the browser automatically includes the refresh cookie, and the response returns a fresh access token.
+4. **Logout** by hitting `/api/auth/logout` and wiping the stored access token locally; the backend will clear the cookie so refresh attempts fail after logout.
+5. **Protect refresh cookies** by leaving them as httpOnly (no frontend access). During local dev you can keep everything on `localhost` without HTTPS; when deploying elsewhere switch `NODE_ENV=production` to force the cookie's `secure` flag.

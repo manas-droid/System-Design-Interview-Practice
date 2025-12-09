@@ -1,35 +1,30 @@
 import { DataSource } from 'typeorm'
 import { Client } from 'pg'
 
-import dotenv from 'dotenv'
 import { User } from '../schemas/User'
 import { Follower } from '../schemas/Follower'
 import { Post } from '../schemas/Post'
+import { appEnv } from './env'
 
-dotenv.config({
-  path: '.env.dev'
-})
-
-const targetSchema = process.env.DB_SCHEMA || 'public'
+const targetSchema = appEnv.db.schema || 'public'
 
 const sanitizeIdentifier = (value: string) => `"${value.replace(/"/g, '""')}"`
 
 const buildPgConfig = () => ({
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER_NAME,
-  password: process.env.DB_USER_PASS,
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+  host: appEnv.db.host,
+  database: appEnv.db.name,
+  user: appEnv.db.username,
+  password: appEnv.db.password,
+  port: appEnv.db.port,
 })
 
 const PostgreSQLDatasource = new DataSource({
     type: "postgres",
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    username: process.env.DB_USER_NAME,
-    password: process.env.DB_USER_PASS,
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10): 5432,
-    synchronize:true,
+    host: appEnv.db.host,
+    database: appEnv.db.name,
+    username: appEnv.db.username,
+    password: appEnv.db.password,
+    port: appEnv.db.port,
     schema: targetSchema,
     entities: [User, Follower, Post],
 })
