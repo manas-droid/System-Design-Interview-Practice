@@ -3,6 +3,7 @@ export enum AuthErrorCode {
   HandleTaken = 'HANDLE_TAKEN',
   InvalidCredentials = 'INVALID_CREDENTIALS',
   InvalidRefreshToken = 'INVALID_REFRESH_TOKEN',
+  InvalidAccessToken = 'INVALID_ACCESS_TOKEN',
   MissingRefreshToken = 'MISSING_REFRESH_TOKEN',
   UserNotFound = 'USER_NOT_FOUND'
 }

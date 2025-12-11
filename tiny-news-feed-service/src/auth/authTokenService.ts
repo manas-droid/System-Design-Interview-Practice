@@ -23,19 +23,25 @@ export const issueAuthTokens = (user: PublicUser): AuthTokens => {
   return { accessToken, refreshToken }
 }
 
-export const decodeRefreshToken = (token: string): TokenPayload => {
+const decodeToken = (token: string, secret: string, errorCode: AuthErrorCode): TokenPayload => {
   try {
-    const payload = jwt.verify(token, appEnv.jwt.refreshSecret)
-    if (typeof payload === 'string') {
+    const payload = jwt.verify(token, secret)
+    if (typeof payload === 'string' || !payload || typeof (payload as Record<string, unknown>).sub !== 'string') {
       throw new Error('Invalid payload shape')
     }
 
     return {
       sub: payload.sub as string,
-      email: payload.email as string,
-      handle: payload.handle as string,
+      email: (payload.email as string) ?? '',
+      handle: (payload.handle as string) ?? '',
     }
   } catch (error) {
-    throw new AuthError(AuthErrorCode.InvalidRefreshToken, 401)
+    throw new AuthError(errorCode, 401)
   }
 }
+
+export const decodeRefreshToken = (token: string): TokenPayload =>
+  decodeToken(token, appEnv.jwt.refreshSecret, AuthErrorCode.InvalidRefreshToken)
+
+export const decodeAccessToken = (token: string): TokenPayload =>
+  decodeToken(token, appEnv.jwt.accessSecret, AuthErrorCode.InvalidAccessToken)
