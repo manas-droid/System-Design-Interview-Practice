@@ -4,6 +4,7 @@ import { AuthError, AuthErrorCode } from "../auth/authErrors";
 import { IUserService, UserService } from "../user/user.service";
 import { IPostService, PostRequest, PostResponse, PostService } from "./post.service";
 import { User } from "../schemas/User";
+import { pushPostDetailsToBroker } from "./post.kafka.producer";
 
 
 const userService : IUserService = new UserService();
@@ -34,11 +35,12 @@ export const postController = async (req:Request, res: Response) =>{
 
     const postResponse : PostResponse = await postService.addPostByUser(user, postRequest);
 
-    /** TO DO:
-     *  Push to Kafka Topic "new_posts"
-     *  Consume it in Feed Service
-     * 
+
+    /**
+     * Consumed in feed service
      */
+    await pushPostDetailsToBroker(postResponse);
+
 
   } catch (error) {
 

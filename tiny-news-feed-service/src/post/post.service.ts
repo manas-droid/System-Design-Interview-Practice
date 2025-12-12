@@ -12,7 +12,8 @@ export interface PostRequest {
 
 
 export interface PostResponse {
-    id : string
+    id : string,
+    userId:string
 }
 
 
@@ -39,15 +40,35 @@ export class PostService implements IPostService {
 
         const newPost = this.postRepository.create({
             content : postDetails.content,
-            photoURL: postDetails?.photoURL
+            photoURL: postDetails?.photoURL,
+            user
         });
 
        const savedPost =  await this.postRepository.save(newPost);
         
+        console.log("Post Service: Saved Post ",savedPost);
 
        return {
-            id : savedPost.id
+            id : savedPost.id,
+            userId: user.id
        }
     }
 
 }
+/*
+
+docker exec -it kafka kafka-topics \
+  --create \
+  --topic new_posts \
+  --partitions 1 \
+  --replication-factor 1 \
+  --if-not-exists \
+  --bootstrap-server kafka:29092
+
+docker exec -it kafka kafka-topics \
+  --list \
+  --bootstrap-server kafka:29092
+
+
+
+*/
