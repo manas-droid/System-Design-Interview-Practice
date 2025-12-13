@@ -5,7 +5,7 @@ import { KafkaConstants } from '../utils/kafka.const';
 
 const kafka = new Kafka({
     clientId: 'post-service',
-    brokers:['localhost:9092']
+    brokers:[KafkaConstants.KAFKA_BROKER_URL]
 });
 
 
