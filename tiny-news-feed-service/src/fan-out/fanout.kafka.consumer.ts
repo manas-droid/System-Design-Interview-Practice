@@ -1,5 +1,8 @@
 import {Kafka} from 'kafkajs';
 import { KafkaConstants } from '../utils/kafka.const';
+import { PostResponse } from '../post/post.service';
+import { stringToPostConsumerResponse } from '../utils/kafka.value.mapper';
+import { FanOutService, IFanOutService } from './fanout.service';
 
 
 const kafka = new Kafka({
@@ -13,18 +16,27 @@ const kafkaConsumer = kafka.consumer({
 });
 
 
+const fanOutService:IFanOutService = new FanOutService();
 
 export const initFanOutServiceConsumer = async ()=>{
     await kafkaConsumer.connect();
     await kafkaConsumer.subscribe({ topic: KafkaConstants.NEW_POST_TOPIC, fromBeginning: true });
 
     await kafkaConsumer.run({
-        eachMessage : async ({topic,message, partition})=>{
-            console.log("Topic", topic);
+        eachMessage : async ({message})=>{
+
             console.log("key", message.key?.toString());
-            console.log("value", message.value?.toString());
-            console.log("value json", message.value?.toJSON());
-            console.log("Partition", partition);
+
+            const stringValue = message.value?.toString();
+
+            if(stringValue){
+                const postResponse:PostResponse = stringToPostConsumerResponse(stringValue);  
+
+                await fanOutService.publishPostByUser(postResponse);
+            }
+            
+            else console.error("Fan-out Kafka Consumer : Value does exist");
+
         }
     });
 

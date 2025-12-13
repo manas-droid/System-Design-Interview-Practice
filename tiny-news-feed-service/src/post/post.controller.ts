@@ -41,6 +41,9 @@ export const postController = async (req:Request, res: Response) =>{
      */
     await pushPostDetailsToBroker(postResponse);
 
+    res.status(201).json({
+      message: 'Posted Successfully!'
+    });
 
   } catch (error) {
 
