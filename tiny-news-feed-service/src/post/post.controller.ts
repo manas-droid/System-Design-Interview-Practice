@@ -26,7 +26,6 @@ export const postController = async (req:Request, res: Response) =>{
     const user : (User|null) = await userService.getUserIfExists(payload.sub);
 
     if(!user) {
-        console.error("User Does not exist", payload);
         return res.status(404).json({code : AuthErrorCode.UserNotFound});
     }
 

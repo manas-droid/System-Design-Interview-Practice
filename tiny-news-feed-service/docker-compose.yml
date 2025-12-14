@@ -36,10 +36,6 @@ services:
       # Required for Zookeeper mode
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       
-    # Best Practice: Persist Kafka data across restarts
-    volumes:
-      - kafka_data:/var/lib/kafka/data
-
   redis:
     image: redis:latest
     hostname: redis
@@ -48,6 +44,12 @@ services:
     restart: always 
     ports:
       - "6379:6379"
+    command:
+      [
+        "redis-server",
+        "--maxmemory", "128mb",
+        "--maxmemory-policy", "allkeys-lru"
+      ]
 
 # Define the named volumes
 volumes:

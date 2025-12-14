@@ -29,6 +29,11 @@ export class FanOutService implements IFanOutService {
         // normal user
         const followersOfAuthor: Array<FollowerResponse>  = await this.userService.getFollowersForUserId(postResponse.userId);
 
+        followersOfAuthor.push({
+            id: postResponse.userId
+        })
+
+
         await this.inboxCacheService.fanoutPostToFollowerInboxesPipelined(postResponse, followersOfAuthor);
 
         console.log("Fan out Write Service Successful!");

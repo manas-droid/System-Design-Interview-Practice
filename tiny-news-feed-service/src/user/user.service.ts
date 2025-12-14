@@ -8,11 +8,12 @@ export interface IUserService {
     getUserIfExists(userId:string) : Promise<User|null>;
     isUserACelebrity(userId:string) : Promise<Boolean>;
     getFollowersForUserId(userId:string): Promise<Array<FollowerResponse>>;
+    getCelebritiesFollowedByUser(userId:string) : Promise<Array<string>>;
+    checkIfUserExists(userId:string): Promise<boolean>
 }
 
-
 export interface FollowerResponse {
-    followerId:string
+    id:string
 }
 
 
@@ -67,9 +68,54 @@ export class UserService implements IUserService {
 
         return followerResponse.map((f)=>{
             return {
-                followerId: f.followee.id
+                id: f.followee.id
             }
         })
     }
+
+
+    async getCelebritiesFollowedByUser(userId: string): Promise<Array<string>> {
+        
+        
+        
+        const hotUsersSubQuery = this.followerRepository
+            .createQueryBuilder("f2")
+            .select('f2."followeeId"', "followeeId") // **NOTE: Quoting is critical here**
+            .groupBy('f2."followeeId"')
+            .having("COUNT(f2.\"followerId\") >= :threshold", { threshold: this.HOT_USER_THRESHOLD });
+
+        // --- 2. Define the Main Query (f1) and JOIN ---
+        const followedHotUsers = await this.followerRepository
+            .createQueryBuilder("f1")
+            // SELECT: Reference the column name with quotes to match the DB
+            .select('f1."followeeId"', "hotUserId")
+            
+            // JOIN: Pass the raw SQL query for the subquery
+            // Use the ALIAS 'HotUsers' in the condition string explicitly.
+            .innerJoin(
+                `(${hotUsersSubQuery.getQuery()})`, 
+                "HotUsers", 
+                'f1."followeeId" = "HotUsers"."followeeId"' // **FIX: Reference the subquery alias (HotUsers) explicitly with quotes**
+            )
+            // Set the parameters for the inner query (HotUsers)
+            .setParameters(hotUsersSubQuery.getParameters())
+            
+            // WHERE: Filter down to the user requesting the feed
+            .where('f1."followerId" = :userId', { userId: userId })
+            
+            // EXECUTION: Get the raw results
+            .getRawMany();        // TypeORM returns an array of objects ({ hotUserId: 123 }). 
+        // We map this to a flat array of numbers.
+        
+        return followedHotUsers.map(result => result.hotUserId);
+                
+    }
+
+
+
+    async checkIfUserExists(userId:string): Promise<boolean>{
+        return await this.userRepository.existsBy({id: userId});
+    }
+
 
 }
