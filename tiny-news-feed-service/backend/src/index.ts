@@ -5,6 +5,7 @@ import { initiateConnection } from './utils/database';
 import authRouter from './auth/authRoutes';
 import postRouter from './post/post.router';
 import feedRouter from './feed/feed.router';
+import cors from 'cors';
 
 import { appEnv } from './utils/env';
 import { initPostServiceKafkaProducer, shutDownPostServiceProducer } from './post/post.kafka.producer';
@@ -14,9 +15,15 @@ import { initRedisClient } from './cache/cache.redis';
 const app = express();
 const PORT = appEnv.server.port;
 
+
+app.use(cors({
+  origin : "http://localhost:5173",
+  credentials:true
+}))
+
+
 app.use(express.json());
 app.use(cookieParser());
-
 app.use('/api/auth', authRouter);
 
 app.use('/api/post', postRouter);
