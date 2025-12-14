@@ -58,17 +58,21 @@ export class UserService implements IUserService {
                 id : userId
             }
         }, 
-        
+
         select : {
-            followee: {
+            follower: {
                 id : true
             }
+        },
+        relations: {
+            follower: true
         }
         });
 
+
         return followerResponse.map((f)=>{
             return {
-                id: f.followee.id
+                id: f.follower.id
             }
         })
     }

@@ -78,7 +78,6 @@ export const loginHandler = async (req: Request, res: Response) => {
 }
 
 export const refreshHandler = async (req: Request, res: Response) => {
-  console.log("Refresh Handler");
   const cookies = extractCookies(req)
   const refreshToken = cookies[appEnv.cookies.refreshTokenName]
   console.log();
