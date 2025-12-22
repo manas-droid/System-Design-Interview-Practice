@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { postService } from '../utils/post.service';
-
 
 interface ProductCrudModalProps {
   isOpen: boolean;
@@ -8,10 +8,6 @@ interface ProductCrudModalProps {
 }
 
 const ProductCrudModal: React.FC<ProductCrudModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) {
-    return null; // Don't render anything if the modal is closed
-  }
-
   const [content, setContent] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,105 +18,110 @@ const ProductCrudModal: React.FC<ProductCrudModalProps> = ({ isOpen, onClose }) 
     onClose(); 
   };
 
-  return (
+  if (!isOpen) {
+    return null;
+  }
 
+  return createPortal(
     <div
       id="crud-modal"
       tabIndex={-1}
       aria-hidden={!isOpen}
-      className="fixed min-h-screen bg-gray-50 z-50 inset-0 flex items-center bg-gray justify-center overflow-y-auto overflow-x-hidden"
-      onClick={onClose} // Close modal when clicking the backdrop
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm"
+      onClick={onClose}
     >
-      {/* Modal content container: max-w-md, centered */}
-      <div 
-        className="relative p-4 w-full max-w-md max-h-full"
-        onClick={(e) => e.stopPropagation()} // Prevent backdrop click from closing the modal
+      <div
+        className="relative w-full max-w-lg"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal body */}
-        <div className="relative bg-neutral-primary-soft border border-default rounded-base shadow-sm p-4 md:p-6">
-          
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-default pb-4 md:pb-5">
-            <h3 className="text-lg font-medium text-heading">
-              Add Post
-            </h3>
-            {/* Close button */}
+        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-sky-500/15 via-indigo-500/10 to-transparent blur-2xl" aria-hidden />
+
+        <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-slate-900/90 shadow-2xl shadow-sky-900/40">
+          <div className="flex items-center justify-between px-5 py-4 sm:px-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Compose</p>
+              <h3 className="text-lg font-semibold text-white">Share an update</h3>
+            </div>
             <button
               type="button"
-              className="text-body  hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-slate-200 transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
               onClick={onClose}
               aria-label="Close modal"
             >
-              <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18 17.94 6M18 18 6.06 6" />
               </svg>
               <span className="sr-only">Close modal</span>
             </button>
           </div>
-          
-          {/* Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 grid-cols-2 py-4 md:py-6">
-              
-              {/* Description Textarea */}
-              <div className="col-span-2">
-                <label htmlFor="description" className="block mb-2.5 text-sm font-medium text-heading">Content</label>
+
+          <form onSubmit={handleSubmit} className="space-y-4 px-5 pb-5 sm:px-6 sm:pb-6">
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium text-slate-200">
+                What&apos;s happening?
+              </label>
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/70 shadow-inner shadow-slate-950/80">
                 <textarea
                   id="description"
-                  rows={4}
+                  rows={5}
+                  value={content}
                   onChange={(e)=>setContent(e.target.value)}
-
-                  className="block bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand w-full p-3.5 shadow-xs placeholder:text-body"
-                  placeholder="Share something with the world!"
+                  className="block w-full resize-none bg-transparent px-4 py-3 text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none"
+                  placeholder="Share something with the community..."
                 ></textarea>
+                <div className="flex items-center justify-between border-t border-white/5 px-4 py-2 text-xs text-slate-400">
+                  <span>Markdown not supported yet</span>
+                  <span>{content.length}/280</span>
+                </div>
               </div>
             </div>
-            
-            {/* Footer Actions */}
-            <div className="flex items-center space-x-4 border-t border-default pt-4 md:pt-6">
-              
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="inline-flex items-center bg-indigo-600 text-white box-border border focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5"
-              >
-                Submit
-              </button>
-              
-              {/* Cancel Button */}
+
+            <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none"
+                className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-200"
               >
                 Cancel
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/40 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
+              >
+                <svg className="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m5 12 4 4L19 6" />
+                </svg>
+                Post it
               </button>
             </div>
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
-// --- 2. Example Usage Component to manage state ---
+type PostFormProps = {
+  className?: string;
+};
 
-const PostForm: React.FC = () => {
+const PostForm: React.FC<PostFormProps> = ({ className = "" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   return (
-    <div className='fixed top-4 right-4 z-10'>      
+    <div className={className}>      
       {/* Button to open the modal */}
       <button
         onClick={toggleModal}
-        className="inline-flex items-center bg-blue-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors rounded-base text-sm px-4 py-2.5 focus:outline-none"
+        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
         type="button"
       >
-            <svg className="w-4 h-4 me-1.5 -ms-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7 7V5" />
-            </svg>
+        <svg className="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7 7V5" />
+        </svg>
 
         Add New Post
       </button>
@@ -136,4 +137,3 @@ const PostForm: React.FC = () => {
 };
 
 export default PostForm;
-// You would export ProductCrudModal and use it where needed.
