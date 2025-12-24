@@ -209,7 +209,7 @@ const PostCard: React.FC<{ post: PostDetailResponse }> = ({ post }) => {
                         <img
                             src={photoURL}
                             alt="Post attachment"
-                            className="h-auto w-full object-cover"
+                            className="h-auto w-full max-h-96 object-cover"
                         />
                     </div>
                 )}
