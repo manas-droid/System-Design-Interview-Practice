@@ -34,12 +34,20 @@ export class FeedService implements IFeedService {
         
         const celebrities:Array<string> = await this.userService.getCelebritiesFollowedByUser(userId);
 
-        const celebrityPostIds : Array<CachedFeedItem> = await this.inboxCacheService.getInboxesOfCelebritiesPipelined(celebrities, 3, cursor)
-        
+        const celebrityPostIds : Array<CachedFeedItem> = await this.inboxCacheService.getInboxesOfCelebritiesPipelined(celebrities, 3, cursor);
         const normalPostIds : Array<CachedFeedItem> = await this.inboxCacheService.getInboxOfUser(userId, 7, cursor);
 
-        const mergedPostIds = [...celebrityPostIds, ...normalPostIds];
 
+        // Merge and de-duplicate by post ID while keeping the latest score
+        const mergedMap = new Map<string, CachedFeedItem>();
+        for (const item of [...celebrityPostIds, ...normalPostIds]) {
+            const existing = mergedMap.get(item.value);
+            if (!existing || item.score > existing.score) {
+                mergedMap.set(item.value, item);
+            }
+        }
+
+        const mergedPostIds = Array.from(mergedMap.values());
         mergedPostIds.sort((a,b)=>b.score - a.score);
 
         const topFeedItems = mergedPostIds.slice(0, this.NEWS_FEED_LIMIT);
@@ -60,4 +68,3 @@ export class FeedService implements IFeedService {
     }
     
 }
-

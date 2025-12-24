@@ -19,21 +19,41 @@ export interface CachedFeedItem {
 export class InboxCacheService implements IInboxCacheService {
     private readonly INBOX_LIMIT = 500;
 
+    generateCelebrityInboxKey(userId:string){
+        return `inbox:celebrity:public:${userId}`
+    }
+
+    
+    // could be of celebrities or normal users
+
     generateInboxKey(userId:string):string{
-        return `inbox:${userId}`;
+        return `inbox:private:${userId}`;
     }
 
     async publishPostToHotUserInbox(postResponse: PostResponse): Promise<void> {
         const userId:string = postResponse.userId;
 
         try {
-            const key: string = this.generateInboxKey(userId);
-            await redisClient.zAdd(key, {
+
+            const publicInboxKey:string = this.generateCelebrityInboxKey(userId);
+
+            const privateInboxKey: string = this.generateInboxKey(userId);
+
+            await redisClient.zAdd(publicInboxKey, {
                 score: Date.now(),
                 value: postResponse.id
             });
-            await redisClient.zRemRangeByRank(key,0, -(this.INBOX_LIMIT+1));
             
+
+            await redisClient.zAdd(privateInboxKey, {
+                score: Date.now(),
+                value: postResponse.id
+            });
+            
+
+            await redisClient.zRemRangeByRank(publicInboxKey,0, -(this.INBOX_LIMIT+1));
+
+            await redisClient.zRemRangeByRank(privateInboxKey,0, -(this.INBOX_LIMIT+1));
 
         } catch (error) {
             console.error(`Error updating ZSET inbox for user ${userId}:`, error);            
@@ -60,7 +80,7 @@ export class InboxCacheService implements IInboxCacheService {
 
 
         for (const celebrity of celebrityUserIds) {
-            const inboxKey:string = this.generateInboxKey(celebrity);
+            const inboxKey:string = this.generateCelebrityInboxKey(celebrity);
 
             pipeline.zRangeWithScores(
             inboxKey,
