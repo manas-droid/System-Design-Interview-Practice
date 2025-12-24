@@ -20,7 +20,8 @@
     "pg": "^8.16.3",
     "redis": "^5.10.0",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.28"
+    "typeorm": "^0.3.28",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -30,6 +31,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.19.26",
     "@types/pg": "^8.15.6",
+    "@types/ws": "^8.5.13",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

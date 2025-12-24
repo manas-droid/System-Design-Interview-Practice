@@ -11,6 +11,7 @@ import { appEnv } from './utils/env';
 import { initPostServiceKafkaProducer, shutDownPostServiceProducer } from './post/post.kafka.producer';
 import { initFanOutServiceConsumer, shutDownFanOutServiceConsumer } from './fan-out/fanout.kafka.consumer';
 import { initRedisClient } from './cache/cache.redis';
+import { startWebsocketServer } from './realtime/ws.hub';
 
 const app = express();
 const PORT = appEnv.server.port;
@@ -44,6 +45,8 @@ const start = async ()=>{
   const server = app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
   });
+
+  startWebsocketServer(server);
 
   const gracefulExit = async ()=>{
     server.close();

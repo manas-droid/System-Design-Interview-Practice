@@ -1,9 +1,10 @@
 // import { useAuth } from "../auth/AuthContext";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getFeedService, type FeedResponse, type PostDetailResponse } from "../utils/feed.service";
 import PostForm from "./Post";
 import { useAuth } from "../auth/AuthContext";
+import { useFeedSocket } from "../realtime/useFeedSocket";
 
 
 const formatDate = (dateInput: string | Date): string => {
@@ -44,36 +45,68 @@ export default function AppHome() {
     const [feedResponse, setFeedResponse] = useState<FeedResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [refreshNotices, setRefreshNotices] = useState(0);
+
+    const loadFeed = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await getFeedService();
+            setFeedResponse(res);
+        } catch {
+            setError("We couldn't load your feed right now. Please retry in a moment.");
+        } finally {
+            setLoading(false);
+            setRefreshNotices(0);
+        }
+    }, []);
 
     useEffect(() => {
         let active = true;
-
-        getFeedService()
-            .then((res) => {
-                if (!active) return;
-                setFeedResponse(res);
-            })
-            .catch(() => {
-                if (!active) return;
-                setError("We couldn't load your feed right now. Please retry in a moment.");
-            })
-            .finally(() => {
-                if (!active) return;
-                setLoading(false);
-            });
-
+        loadFeed().catch(() => {
+            if (!active) return;
+            setError("We couldn't load your feed right now. Please retry in a moment.");
+        });
         return () => {
             active = false;
         };
-    }, []);
+    }, [loadFeed]);
 
-    const posts = feedResponse?.posts ?? [];
+    const posts = useMemo(() => {
+        const list = feedResponse?.posts ?? [];
+        const seen = new Set<string>();
+        return list.filter((p) => {
+            if (seen.has(p.id)) return false;
+            seen.add(p.id);
+            return true;
+        });
+    }, [feedResponse]);
     const todaysCount = useMemo(
         () => posts.filter((post) => isSameDay(post.createdAt)).length,
         [posts]
     );
     const initials =
         (user?.firstName?.[0] ?? "") + (user?.lastName?.[0] ?? "") || user?.handle?.[0] || "NF";
+
+    const handleOwnPost = useCallback((post: PostDetailResponse) => {
+        setFeedResponse((prev) => {
+            const currentPosts = prev?.posts ?? [];
+            const withoutDupes = currentPosts.filter((p) => p.id !== post.id);
+            return {
+                nextCursor: prev?.nextCursor ?? null,
+                posts: [post, ...withoutDupes],
+            };
+        });
+    }, []);
+
+    const handleRefreshNotice = useCallback(() => {
+        setRefreshNotices((count) => count + 1);
+    }, []);
+
+    useFeedSocket({
+        onOwnPost: handleOwnPost,
+        onRefreshNotice: handleRefreshNotice,
+    });
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-50">
@@ -127,6 +160,25 @@ export default function AppHome() {
                 </header>
 
                 <main className="mt-8">
+                    {refreshNotices > 0 && (
+                        <div className="mb-4 flex justify-center">
+                            <button
+                                type="button"
+                                onClick={loadFeed}
+                                className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-4 py-2 text-sm font-semibold text-emerald-100 shadow-lg shadow-emerald-900/40 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+                            >
+                                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_0_6px_rgba(74,222,128,0.25)]" aria-hidden />
+                                New posts available
+                                <span className="rounded-full bg-emerald-300/30 px-2 py-0.5 text-xs font-semibold text-emerald-50">
+                                    {refreshNotices}
+                                </span>
+                                <svg className="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m4 4 7.5 7.5L4 19M13 5h7m-7 14h7" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+
                     {error && (
                         <div className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-400/15 px-4 py-3 text-sm text-amber-100 shadow-lg shadow-amber-900/40">
                             {error}

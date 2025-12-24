@@ -8,7 +8,7 @@ export interface PostDetailResponse {
         handle: string;
         id: string;
     };
-    createdAt: Date;
+    createdAt: string;
 }
 
 
