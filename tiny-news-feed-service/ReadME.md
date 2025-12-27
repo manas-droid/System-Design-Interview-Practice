@@ -15,8 +15,14 @@ Hybrid Fan-out Strategy: Implement two distinct fan-out mechanisms to handle bot
 
 Decoupling: Use a microservice architecture to separate concerns and allow independent scaling.
 
+## Home Page:
+
+![News Feed - Home Page](./image.png)
+
+
 ## 2. System Architecture
 The system is designed as a set of decoupled, specialized services that communicate primarily via an API Gateway and an Asynchronous Message Queue.
+
 
 ### Services (Node.js)
 
