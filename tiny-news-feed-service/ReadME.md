@@ -15,14 +15,13 @@ Hybrid Fan-out Strategy: Implement two distinct fan-out mechanisms to handle bot
 
 Decoupling: Use a microservice architecture to separate concerns and allow independent scaling.
 
-## 2. Microservice Architecture
+## 2. System Architecture
 The system is designed as a set of decoupled, specialized services that communicate primarily via an API Gateway and an Asynchronous Message Queue.
 
-### Microservices Services (Node.js)
+### Services (Node.js)
 
 | Service Name   | Primary Responsibilities                                                                                          | Clarification                                                                                                      |
 |----------------|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| API Gateway    | Entry point for all external requests, routes traffic.                                                           |  Can use Nginx or simple NodeJS server |
 | User Service   | Registration, Login, Authentication, User Profile Management, Follower Graph Management.                         |  This service must handle the Follower Graph (who follows whom) as this data is crucial for the Fan-out Service and is core user data. |
 | Post Service   | Receiving post requests, validating user tokens, persisting post content to PostgreSQL, and publishing post events to Kafka. | Its job is to handle the write path's immediate persistence and event initiation.                                     |
 | Feed Service   | Handling user read requests, orchestrating data pull from Redis/PostgreSQL, merging feed lists, and ranking/hydrating the final feed. | This is the core read-optimized service.                                                                             |
@@ -70,8 +69,6 @@ This project leverages a hybrid local setup, utilizing native installations for 
 2. PostgreSQL (Installed natively on Ubuntu).
 
 3. Docker & Docker Compose (For running Kafka and Redis).
-
-4. k6 or Locust (For load testing simulation).
 
 ### Step-by-Step Setup
 
